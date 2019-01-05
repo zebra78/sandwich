@@ -1,0 +1,117 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Step by Step CFT creation'
+
+Resources:
+    offVPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: 10.0.0.0/16
+            EnableDnsSupport: 'false'
+            EnableDnsHostnames: 'false'
+            InstanceTenancy: default
+            Tags:
+            - Key: Name
+              Value: OffVPC
+
+
+# CREATE INTERNET GATEWAY
+    offIG:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+            - Key: Name
+              Value: OffIG
+
+# ATTACH INTERNET GATEWAY TO VPC
+    offAttIG:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: 
+                Ref: offVPC
+            InternetGatewayId:
+                Ref: offIG
+# CREATE ROUTE TABLE
+    offRT:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId:
+                Ref: offVPC
+            Tags:
+            - Key: Name
+              Value: OffRT
+# ADD ROUTE TO INTERNET GATEWAY
+    offR:
+        Type: AWS::EC2::Route
+        DependsOn: offIG
+        Properties:
+            RouteTableId:
+                Ref: offRT
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId:
+                Ref: offIG
+# CREATE SUBNET
+    offSN1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: offVPC
+            CidrBlock: 10.0.1.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: OffSN1
+    offSN2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: offVPC
+            CidrBlock: 10.0.2.0/24
+            AvailabilityZone: "us-east-2b"
+            Tags:
+            - Key: Name
+              Value: OffSN2
+
+# UPDATE SUBNET ASSOCIATION
+    offSNRTA1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: offSN1
+            RouteTableId:
+                Ref: offRT
+    offSNRTA2:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: offSN2
+            RouteTableId:
+                Ref: offRT
+
+# SECURITY GROUPS
+    offISG:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Allow 80 in and out dummy group
+            GroupName: OffISGGN
+            VpcId:
+                Ref: offVPC
+            SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 80
+              ToPort: 80
+              CidrIp: 10.10.10.10/32
+            SecurityGroupEgress:
+            - IpProtocol: tcp
+              FromPort: 80
+              ToPort: 80
+              CidrIp: 0.0.0.0/0
+            Tags:
+            - Key: Name
+              Value: OffISG
+
+# # IAM User for code deploy auto
+    # offIAMU:
+        # Type: AWS::IAM::User
+        # Properties:
+            # UserName: AutoCodeComm
