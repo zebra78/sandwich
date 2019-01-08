@@ -1,0 +1,250 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create a bastion host and application host, that has ssh access only from bastion host'
+
+Resources:
+    BastionVpc:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: 10.0.0.0/16
+            EnableDnsSupport: 'false'
+            EnableDnsHostnames: 'false'
+            InstanceTenancy: default
+            Tags:
+            -   Key: Name
+                Value: bastion-vpc
+
+    BastionIgw:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+            -   Key: Name
+                Value: bastion-igw
+
+    BastionIgwAttachToBastionVpc:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: 
+                Ref: BastionVpc
+            InternetGatewayId:
+                Ref: BastionIgw
+
+    BastionRtIgw:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId:
+                Ref: BastionVpc
+            Tags:
+            - Key: Name
+              Value: bastion-rt-igw
+
+    BastionRtNgw:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId:
+                Ref: BastionVpc
+            Tags:
+            - Key: Name
+              Value: bastion-rt-ngw
+              
+    BastionRtIgwAddRoute:
+        Type: AWS::EC2::Route
+        DependsOn: BastionIgw
+        Properties:
+            RouteTableId:
+                Ref: BastionRtIgw
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId:
+                Ref: BastionIgw              
+
+    BastionPubSn1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: BastionVpc
+            CidrBlock: 10.0.1.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: bastion-pub-sn1
+
+    BastionPubSn2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: BastionVpc
+            CidrBlock: 10.0.2.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: bastion-pub-sn2
+
+    BastionRtIgwAssociateBastionPubSn1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: BastionPubSn1
+            RouteTableId:
+                Ref: BastionRtIgw              
+
+    BastionRtIgwAssociateBastionPubSn2:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: BastionPubSn2
+            RouteTableId:
+                Ref: BastionRtIgw   
+                
+    BastionNgw:
+        DependsOn: BastionIgwAttachToBastionVpc
+        Type: AWS::EC2::NatGateway
+        Properties:
+            AllocationId: !GetAtt 'BastionNgwEIP.AllocationId'
+            SubnetId:
+                Ref: BastionPubSn1
+            Tags:
+            -   Key: Name
+                Value: bastion-ngw
+    
+    BastionNgwEIP:
+        Type: AWS::EC2::EIP
+        Properties:
+            Domain: vpc
+    
+    BastionNgwRoute:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId:
+                Ref: BastionRtNgw
+            DestinationCidrBlock: 0.0.0.0/0
+            NatGatewayId:
+                Ref: BastionNgw
+                
+    BastionPriSn1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: BastionVpc
+            CidrBlock: 10.0.3.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: bastion-pri-sn1
+
+    BastionPriSn2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: BastionVpc
+            CidrBlock: 10.0.4.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: bastion-pri-sn2         
+
+    BastionRtNgwAssociateBastionPriSn1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: BastionPriSn1
+            RouteTableId:
+                Ref: BastionRtNgw              
+
+    BastionRtNgwAssociateBastionPriSn2:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: BastionPriSn2
+            RouteTableId:
+                Ref: BastionRtNgw     
+
+    BastionPubSg1:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: BastionPubSg1
+            GroupName: BastionPubSg1
+            VpcId:
+                Ref: BastionVpc
+            SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 22
+              ToPort: 22
+              CidrIp: $myIp$
+            Tags:
+            - Key: Name
+              Value: bastion-pub-sg1
+
+    BastionPriSg1:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: BastionPubSg1
+            GroupName: BastionPriSg1
+            VpcId:
+                Ref: BastionVpc
+            SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 22
+              ToPort: 22
+              CidrIp: 10.0.0.0/16
+            Tags:
+            - Key: Name
+              Value: bastion-pri-sg1
+              
+    JumpServer:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: t2.micro
+            ImageId: ami-02e680c4540db351e
+            KeyName: bastion
+            SecurityGroupIds:
+            - Ref:    "BastionPubSg1"
+            SubnetId: 
+                Ref:    "BastionPubSn1"
+                
+    JumpServerEip:
+        Type: AWS::EC2::EIP
+        Properties:
+            InstanceId: !Ref JumpServer
+            Domain: vpc  
+            
+    AppServer:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: t2.micro
+            ImageId: ami-02e680c4540db351e
+            KeyName: bastion
+            SecurityGroupIds:
+            - Ref:    "BastionPriSg1"
+            SubnetId: 
+                Ref:    "BastionPriSn1"                
+
+          
+                
+#aws cloudformation validate-template --template-body file://C:/Users/madhu/Downloads/bastion.yml
+#aws cloudformation create-stack --stack-name bastion-stack --template-body file://C:/Users/madhu/Downloads/bastion.yml
+#aws cloudformation update-stack --stack-name bastion-stack --template-body file://C:/Users/madhu/Downloads/bastion.yml
+#aws cloudformation delete-stack --stack-name bastion-stack
+
+# bastion-vpc 10.0.0.0/16
+# bastion-igw
+# attach igw to vpc
+# bastion-rt-igw
+# add route to bastion-igw for 0.0.0.0/0
+# bastion-pub-sn1 10.0.1.0/24 - az1
+# bastion-pub-sn2 10.0.2.0/24 - az2
+# associate the bastion-rt-igw to bastion-pub-sn1
+# associate the bastion-rt-igw to bastion-pub-sn2
+# get and elastic ip - e.g. 1.1.1.1
+# bastion-ngw - create it in the bastion-pub-sn1 with elastic ip
+# bastion-rt-ngw 
+
+# bastion-pri-sn1 10.0.3.0/24 - az1
+# bastion-pri-sn2 10.0.4.0/24 - az2
+
+# bastion-pub-sn1-jumpserver - on pub-sn1
+# bastion-pub-sn-sg1
+# ssh - tcp - 22 - myip 
+
+# bastion-pub-sn1-applserver - on pri-sn1
+# bastion-pri-sn-sg1
+# ssh - tcp - 22 - bastion-pub-sn1 and bastion-pub-sn2                
