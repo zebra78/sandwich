@@ -1,0 +1,28 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create a subnet'
+
+Parameters:
+    RootStack:
+        Description: Detailing Root CF
+        Type: String
+        Default: Root        
+        
+Resources:
+    AppPubSn1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Fn::ImportValue: !Sub '${RootStack}-VpcId'
+            CidrBlock: 10.0.0.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: AppPubSn1
+
+Outputs:
+    VpcCIDR:
+        Description: Subnet ID
+        Value: !GetAtt AppPubSn1.SubnetId
+        Export:
+            Name: !Sub "${AWS::StackName}-SubnetId"                    

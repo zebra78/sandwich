@@ -1,0 +1,248 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create a app setup'
+
+Parameters:
+    BastionStack:
+        Description: Detailing Bastion CF
+        Type: String
+        Default: Bastion 
+        
+Resources:
+    AppVpc:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: 10.1.0.0/16
+            EnableDnsSupport: 'true'
+            EnableDnsHostnames: 'true'
+            InstanceTenancy: default
+            Tags:
+            -   Key: Name
+                Value: app-vpc
+
+    AppIgw:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+            -   Key: Name
+                Value: app-igw
+
+    AppIgwAttachToAppVpc:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: 
+                Ref: AppVpc
+            InternetGatewayId:
+                Ref: AppIgw
+                
+    AppPubSn1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            CidrBlock: 10.1.0.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: app-pub-sn1
+
+    AppPubSn2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            CidrBlock: 10.1.1.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: app-pub-sn2
+
+    AppRtIgw:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            Tags:
+            - Key: Name
+              Value: app-rt-igw
+
+    AppRtIgwAddRoute:
+        Type: AWS::EC2::Route
+        DependsOn: AppIgw
+        Properties:
+            RouteTableId:
+                Ref: AppRtIgw
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId:
+                Ref: AppIgw
+                
+    AppRtIgwAssociateAppPubSn1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: AppPubSn1
+            RouteTableId:
+                Ref: AppRtIgw
+
+    AppRtIgwAssociateAppPubSn2:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: AppPubSn2
+            RouteTableId:
+                Ref: AppRtIgw        
+
+    AppPriSn1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            CidrBlock: 10.1.2.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: app-pri-sn1
+    AppPriSn2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            CidrBlock: 10.1.3.0/24
+            AvailabilityZone: "us-east-2a"
+            Tags:
+            - Key: Name
+              Value: app-pri-sn2                
+
+    AppNgw:
+        DependsOn: AppIgwAttachToAppVpc
+        Type: AWS::EC2::NatGateway
+        Properties:
+            AllocationId: !GetAtt 'AppNgwEIP.AllocationId'
+            SubnetId:
+                Ref: AppPubSn1
+            Tags:
+            -   Key: Name
+                Value: app-ngw
+
+    AppNgwEIP:
+        Type: AWS::EC2::EIP
+        Properties:
+            Domain: vpc
+            
+    AppRtNgw:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            Tags:
+            - Key: Name
+              Value: app-rt-ngw
+              
+    AppNgwRoute:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId:
+                Ref: AppRtNgw
+            DestinationCidrBlock: 0.0.0.0/0
+            NatGatewayId:
+                Ref: AppNgw
+
+    AppRtNgwAssociateAppPriSn1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: AppPriSn1
+            RouteTableId:
+                Ref: AppRtNgw
+
+    AppRtNgwAssociateAppPriSn2:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+                Ref: AppPriSn2
+            RouteTableId:
+                Ref: AppRtNgw
+
+    AppPriSg1:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: AppPriSg1
+            GroupName: AppPriSg1
+            VpcId:
+                Ref: AppVpc
+            SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 22
+              ToPort: 22
+              CidrIp:
+                Fn::ImportValue: !Sub '${BastionStack}-VpcCidr'
+            Tags:
+            - Key: Name
+              Value: app-pri-sg1
+              
+    AppServerEC2:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: t2.micro
+            ImageId: ami-0b500ef59d8335eee
+            KeyName: bastion
+            NetworkInterfaces: 
+            - AssociatePublicIpAddress: "false"
+              DeviceIndex: "0"
+              GroupSet:
+              - Ref:    "AppPriSg1"
+              SubnetId: 
+                Ref:    "AppPriSn1"
+            Tags:                
+            - Key: Name
+              Value: app-ins-ec2                
+
+    # Peering
+    BastionAppVPCPeer:
+        Type: AWS::EC2::VPCPeeringConnection
+        Properties:
+            VpcId:
+                Ref: AppVpc
+            PeerVpcId:
+                Fn::ImportValue: !Sub '${BastionStack}-VpcId'
+
+    # RT Bastion Route from Peer CIDR to Peering Connection ID
+    BastionRtPeerCidrToPeeringConnection:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId:
+                Fn::ImportValue: !Sub '${BastionStack}-RtIgw'
+            DestinationCidrBlock: !GetAtt AppVpc.CidrBlock
+            VpcPeeringConnectionId:
+                Ref: BastionAppVPCPeer
+                
+    # RT App Route from Peer CIDR to Peering Connection ID
+    AppRtBastionCidrPeeringConnection:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId:
+                Ref: AppRtNgw 
+            DestinationCidrBlock: 
+                Fn::ImportValue: !Sub '${BastionStack}-VpcCidr'
+            VpcPeeringConnectionId:
+                Ref: BastionAppVPCPeer    
+
+Outputs:
+    AppEC2PrivIPAddress:
+        Description: Output Internal IP 
+        Value: !GetAtt AppServerEC2.ImageId
+        Export:
+            Name: !Sub "${AWS::StackName}-PriIP"
+
+# Instance
+# Routes for Instance
+
+# https://github.com/widdix/learn-cloudformation/blob/master/lab11-output-exports/sample-solution-import.yaml
+              
+
+
+
+
+
+
+              
