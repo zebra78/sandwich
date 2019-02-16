@@ -1,0 +1,294 @@
+aws ec2 describe-instances --query "Reservations[].Instances[].[ InstanceId     , [Tags[?Key==`Name`].Value][0][0],State.Name,InstanceType,Placement.AvailabilityZone ]"
+aws ec2 describe-instances --query "Reservations[].Instances[].[PrivateIpAddress, [Tags[?Key==`Name`].Value][0][0]]"
+
+
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create a vpc'
+
+Parameters:
+
+    Vpc:
+        Description: The name of the stack that exports the values
+        Type: String
+        Default: AppVpc
+    
+Resources:
+    AppVpc:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: 10.0.0.0/16
+            EnableDnsSupport: 'true'
+            EnableDnsHostnames: 'true'
+            InstanceTenancy: default
+            Tags:
+            -   Key: Name
+                Value: !Ref Vpc
+
+Outputs:
+    AppVpc:
+        Description: Id of AppVpc
+        Value: !Ref AppVpc
+        Export:
+            Name: !Ref Vpc
+        
+
+
+# https://github.com/widdix/learn-cloudformation/blob/master/lab11-output-exports/sample-solution-export.yaml
+# https://github.com/widdix/learn-cloudformation/blob/master/lab11-output-exports/sample-solution-import.yaml        
+
+# aws cloudformation describe-stacks --stack-name bastion --query "Stacks[].Outputs[].[OutputKey, OutputValue]" --output table
+# aws ec2 describe-instances --query "Reservations[].Instances[].[PrivateIpAddress, [Tags[?Key==`Name`].Value][0][0]]"  --output table
+
+aws ec2 describe-instances --filters "Name=tag:aws:cloudformation:stack-name,Values=bastion" --query "Reservations[].Instances[].[PrivateIpAddress, [Tags[?Key==`Name`].Value][0][0]]"  --output table
+
+
+aws ec2 describe-instances --filters "Name=tag:aws:cloudformation:stack-name,Values=bastion" --query "Reservations[].Instances[].[PublicIpAddress, PrivateIpAddress, SubnetId, VpcId, [Tags[?Key==`Name`].Value][0][0]]"  --output table
+
+
+aws ec2 describe-instances --filters "Name=tag:aws:cloudformation:stack-name,Values=bastion" --query "Reservations[].Instances[].[PublicIpAddress, PrivateIpAddress, SubnetId, VpcId, [Tags[?Key==`Name`].Value][0][0]]"  --output table
+
+aws ec2 describe-instances --filters "Name=tag:aws:cloudformation:stack-name,Values=bastion" --query "Reservations[].Instances[].[PublicIpAddress, PrivateIpAddress, SubnetId, VpcId, [SecurityGroups[?Key==`GroupName`]][0][0]]"  --output table
+
+λ aws ec2 describe-instances --filters "Name=tag:aws:cloudformation:stack-name,Values=bastion" --query "Reservations[].Instances[].[PublicIpAddress, PrivateIpAddress, SubnetId, VpcId, [SecurityGroups[*].GroupName][0][0] ]"  --output table
+
+
+aws:cloudformation:stack-name|  bastion
+
+###########################################################################
+
+{
+    "Reservations": [
+        {
+            "Groups": [],
+            "Instances": [
+                {
+                    "AmiLaunchIndex": 0,
+                    "ImageId": "ami-0b500ef59d8335eee",
+                    "InstanceId": "i-00cc5672172911ae2",
+                    "InstanceType": "t2.micro",
+                    "KeyName": "bastion",
+                    "LaunchTime": "2019-02-16T09:43:06.000Z",
+                    "Monitoring": {
+                        "State": "disabled"
+                    },
+                    "Placement": {
+                        "AvailabilityZone": "us-east-2a",
+                        "GroupName": "",
+                        "Tenancy": "default"
+                    },
+                    "PrivateDnsName": "ip-10-0-1-65.us-east-2.compute.internal",
+                    "PrivateIpAddress": "10.0.1.65",
+                    "ProductCodes": [],
+                    "PublicDnsName": "ec2-18-220-233-201.us-east-2.compute.amazonaws.com",
+                    "PublicIpAddress": "18.220.233.201",
+                    "State": {
+                        "Code": 16,
+                        "Name": "running"
+                    },
+                    "StateTransitionReason": "",
+                    "SubnetId": "subnet-032de6b8c7e25da7b",
+                    "VpcId": "vpc-09a6e6f5fc95151f9",
+                    "Architecture": "x86_64",
+                    "BlockDeviceMappings": [
+                        {
+                            "DeviceName": "/dev/sda1",
+                            "Ebs": {
+                                "AttachTime": "2019-02-16T09:43:07.000Z",
+                                "DeleteOnTermination": true,
+                                "Status": "attached",
+                                "VolumeId": "vol-0ad7edba243238190"
+                            }
+                        }
+                    ],
+                    "ClientToken": "basti-JumpS-18FDM4YMQCTJT",
+                    "EbsOptimized": false,
+                    "EnaSupport": true,
+                    "Hypervisor": "xen",
+                    "NetworkInterfaces": [
+                        {
+                            "Association": {
+                                "IpOwnerId": "amazon",
+                                "PublicDnsName": "ec2-18-220-233-201.us-east-2.compute.amazonaws.com",
+                                "PublicIp": "18.220.233.201"
+                            },
+                            "Attachment": {
+                                "AttachTime": "2019-02-16T09:43:06.000Z",
+                                "AttachmentId": "eni-attach-0b3ee1f7c7b07a0ba",
+                                "DeleteOnTermination": true,
+                                "DeviceIndex": 0,
+                                "Status": "attached"
+                            },
+                            "Description": "",
+                            "Groups": [
+                                {
+                                    "GroupName": "BastionPubSg1",
+                                    "GroupId": "sg-01398951217066092"
+                                }
+                            ],
+                            "Ipv6Addresses": [],
+                            "MacAddress": "02:12:f5:66:d7:52",
+                            "NetworkInterfaceId": "eni-03d20a13405637109",
+                            "OwnerId": "004804732535",
+                            "PrivateDnsName": "ip-10-0-1-65.us-east-2.compute.internal",
+                            "PrivateIpAddress": "10.0.1.65",
+                            "PrivateIpAddresses": [
+                                {
+                                    "Association": {
+                                        "IpOwnerId": "amazon",
+                                        "PublicDnsName": "ec2-18-220-233-201.us-east-2.compute.amazonaws.com",
+                                        "PublicIp": "18.220.233.201"
+                                    },
+                                    "Primary": true,
+                                    "PrivateDnsName": "ip-10-0-1-65.us-east-2.compute.internal",
+                                    "PrivateIpAddress": "10.0.1.65"
+                                }
+                            ],
+                            "SourceDestCheck": true,
+                            "Status": "in-use",
+                            "SubnetId": "subnet-032de6b8c7e25da7b",
+                            "VpcId": "vpc-09a6e6f5fc95151f9"
+                        }
+                    ],
+                    "RootDeviceName": "/dev/sda1",
+                    "RootDeviceType": "ebs",
+                    "SecurityGroups": [
+                        {
+                            "GroupName": "BastionPubSg1",
+                            "GroupId": "sg-01398951217066092"
+                        }
+                    ],
+                    "SourceDestCheck": true,
+                    "Tags": [
+                        {
+                            "Key": "aws:cloudformation:stack-id",
+                            "Value": "arn:aws:cloudformation:us-east-2:004804732535:stack/bastion/2a4dbdc0-31cf-11e9-999b-06faad620df0"
+                        },
+                        {
+                            "Key": "aws:cloudformation:stack-name",
+                            "Value": "bastion"
+                        },
+                        {
+                            "Key": "Name",
+                            "Value": "bastion-jumpserver-ec2"
+                        },
+                        {
+                            "Key": "aws:cloudformation:logical-id",
+                            "Value": "JumpServer"
+                        }
+                    ],
+                    "VirtualizationType": "hvm",
+                    "CpuOptions": {
+                        "CoreCount": 1,
+                        "ThreadsPerCore": 1
+                    },
+                    "HibernationOptions": {
+                        "Configured": false
+                    }
+                }
+            ],
+            "OwnerId": "004804732535",
+            "RequesterId": "043320173835",
+            "ReservationId": "r-02a8aa717ff88ccfd"
+        }
+    ]
+}
+
+
+###########################################################################
+* describe-account-attributes                                        
+* describe-addresses                                                 
+* describe-aggregate-id-format                                       
+* describe-availability-zones                                        
+* describe-bundle-tasks                                              
+* describe-byoip-cidrs                                               
+* describe-capacity-reservations                                     
+* describe-classic-link-instances                                    
+* describe-client-vpn-authorization-rules                            
+* describe-client-vpn-connections                                    
+* describe-client-vpn-endpoints                                      
+* describe-client-vpn-routes                                         
+* describe-client-vpn-target-networks                                
+* describe-conversion-tasks                                          
+* describe-customer-gateways                                         
+* describe-dhcp-options                                              
+* describe-egress-only-internet-gateways                             
+* describe-elastic-gpus                                              
+* describe-export-tasks                                              
+* describe-fleet-history                                             
+* describe-fleet-instances                                           
+* describe-fleets                                                    
+* describe-flow-logs                                                 
+* describe-fpga-image-attribute                                      
+* describe-fpga-images                                               
+* describe-host-reservation-offerings                                
+* describe-host-reservations                                         
+* describe-hosts                                                     
+* describe-iam-instance-profile-associations                         
+* describe-id-format                                                 
+* describe-identity-id-format                                        
+* describe-image-attribute                                           
+* describe-images                                                    
+* describe-import-image-tasks                                        
+* describe-import-snapshot-tasks                                     
+* describe-instance-attribute                                        
+* describe-instance-credit-specifications                            
+* describe-instance-status                                           
+* describe-instances                                                 
+* describe-internet-gateways                                         
+* describe-key-pairs                                                 
+* describe-launch-template-versions                                  
+* describe-launch-templates                                          
+* describe-moving-addresses                                          
+* describe-nat-gateways                                              
+* describe-network-acls                                              
+* describe-network-interface-attribute                               
+* describe-network-interface-permissions                             
+* describe-network-interfaces                                        
+* describe-placement-groups                                          
+* describe-prefix-lists                                              
+* describe-principal-id-format                                       
+* describe-public-ipv4-pools                                         
+* describe-regions                                                   
+* describe-reserved-instances                                        
+* describe-reserved-instances-listings                               
+* describe-reserved-instances-modifications                          
+* describe-reserved-instances-offerings                              
+* describe-route-tables                                              
+* describe-scheduled-instance-availability                           
+* describe-scheduled-instances                                       
+* describe-security-group-references                                 
+* describe-security-groups                                           
+* describe-snapshot-attribute                                        
+* describe-snapshots                                                 
+* describe-spot-datafeed-subscription                                
+* describe-spot-fleet-instances                                      
+* describe-spot-fleet-request-history                                
+* describe-spot-fleet-requests                                       
+* describe-spot-instance-requests                                    
+* describe-spot-price-history                                        
+* describe-stale-security-groups                                     
+* describe-subnets                                                   
+* describe-tags                                                      
+* describe-transit-gateway-attachments                               
+* describe-transit-gateway-route-tables                              
+* describe-transit-gateway-vpc-attachments                           
+* describe-transit-gateways                                          
+* describe-volume-attribute                                          
+* describe-volume-status                                             
+* describe-volumes                                                   
+* describe-volumes-modifications                                     
+* describe-vpc-attribute                                             
+* describe-vpc-classic-link                                          
+* describe-vpc-classic-link-dns-support                              
+* describe-vpc-endpoint-connection-notifications                     
+* describe-vpc-endpoint-connections                                  
+* describe-vpc-endpoint-service-configurations                       
+* describe-vpc-endpoint-service-permissions                          
+* describe-vpc-endpoint-services                                     
+* describe-vpc-endpoints                                             
+* describe-vpc-peering-connections                                   
+* describe-vpcs                                                      
+* describe-vpn-connections                                           
+* describe-vpn-gateways                                              
+                                                                     
