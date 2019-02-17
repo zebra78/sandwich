@@ -1,3 +1,8 @@
+aws ec2 describe-instances --filters "Name=tag:aws:cloudformation:stack-name,Values=ctob-tst-appendix" --query "Reservations[].Instances[].[PublicIpAddress, PrivateIpAddress, SubnetId, VpcId, [SecurityGroups[*].GroupName][0][0], [Tags[?Key=='Name'].Value][0][0]]" --output table
+
+
+
+
 aws ec2 describe-instances --query "Reservations[].Instances[].[ InstanceId     , [Tags[?Key==`Name`].Value][0][0],State.Name,InstanceType,Placement.AvailabilityZone ]"
 aws ec2 describe-instances --query "Reservations[].Instances[].[PrivateIpAddress, [Tags[?Key==`Name`].Value][0][0]]"
 
