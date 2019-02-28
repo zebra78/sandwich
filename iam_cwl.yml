@@ -1,0 +1,33 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create a vpc'
+
+Resources: 
+
+  CWLRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+
+  CWLPolicy:
+    Type: AWS::IAM::Policy
+    Properties: 
+      PolicyName: "CWLPolicy"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Action: "logs:*"
+            Resource: "*"
+      Roles: 
+        - Ref: CWLRole
+
+
