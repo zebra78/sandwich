@@ -1,0 +1,97 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create a Iam
+
+Resources:
+
+  MadhuVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.1.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default
+      Tags:
+      -  Key: Name
+         Value: MadhuVpc
+
+  MadhuPriSn1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MadhuVpc
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: "us-east-2a"
+      Tags:
+      - Key: Name
+        Value: MadhuPriSn1
+
+  MadhuPriSn2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MadhuVpc
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: "us-east-2a"
+      Tags:
+      - Key: Name
+        Value: MadhuPriSn2
+
+  MadhuPriRt1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MadhuVpc
+      Tags:
+        - Key: Name
+          Value: MadhuPriRt1
+
+  MadhuPriRt2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MadhuVpc
+      Tags:
+        - Key: Name
+          Value: MadhuPriRt2
+
+  MadhuSnRtAss1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: MadhuPriSn1
+      RouteTableId:
+        Ref: MadhuPriRt1
+
+  MadhuSnRtAss2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: MadhuPriSn2
+      RouteTableId:
+        Ref: MadhuPriRt2
+
+#  MadhuS3Endpoint:
+#    Type: AWS::EC2::VPCEndpoint
+#    Properties:
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Principal: '*'
+#            Action:
+#              - 's3:*'
+#            Resource:
+#              - 'arn:aws:s3:::abucket/*'
+#      RouteTableIds:
+#        - !Ref routetableA
+#        - !Ref routetableB
+#      ServiceName: !Join 
+#        - ''
+#        - - com.amazonaws.
+#          - !Ref 'AWS::Region'
+#          - .s3
+#      VpcId: !Ref VPCID
+
+
+
