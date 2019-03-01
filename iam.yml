@@ -1,0 +1,57 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create a Iam
+
+Resources:
+  MadhuCwlMPolicy:
+    Type: AWS::IAM::ManagedPolicy    
+    Properties: 
+      Description: Policy for Cloudwatch Logs access
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect:   Allow
+            Action:   "logs:*"
+            Resource: "*"
+      Roles:
+        - Ref: MadhuAccessRole
+      ManagedPolicyName: MadhuCwlPolicy
+
+  MadhuS3MPolicy:
+    Type: AWS::IAM::ManagedPolicy    
+    Properties: 
+      Description: Policy for S3 access
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect:   Allow
+            Action:   "s3:*"
+            Resource: "*"
+      Roles:
+        - Ref: MadhuAccessRole
+      ManagedPolicyName: MadhuS3Policy
+
+
+  MadhuAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+
+  MadhuAccessIProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      Path: /
+      Roles:
+        - Ref: MadhuAccessRole
+      InstanceProfileName: MadhuAccessIProfile
