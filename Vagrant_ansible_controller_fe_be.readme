@@ -1,0 +1,33 @@
+# On Ansible controller machine
+
+#sudo yum update -y
+#sudo yum install ansible -y
+#ssh-keygen
+#ssh-copy-id vagrant@192.168.100.9
+#ssh-copy-id vagrant@192.168.100.10
+#ansible all -m ping 
+
+#### comment Ansible inventory file
+
+# cat /etc/ansible/hosts
+[feservers]
+192.168.100.9
+[beservers]
+192.168.100.10
+
+
+#ansible all -m ping 
+
+# cat ~/hello.yml
+[vagrant@ctrlr ansible-playbooks]$ cat hello.yml
+---
+- name: Hello World!
+  hosts: all
+
+  tasks:
+
+  - name: Hello World!
+    shell: echo "Hi! Tower is working."
+
+  - name: Installs nginx web server
+    yum: pkg=telnet state=installed
