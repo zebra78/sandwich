@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+    config.vm.define "ctrlr" do |ctrlr|
+        ctrlr.vm.box = "hashicorp-vagrant/centos-7.4"
+        ctrlr.ssh.username = "vagrant"
+        ctrlr.ssh.password = "vagrant"
+        ctrlr.ssh.insert_key = false
+        ctrlr.ssh.forward_agent = true
+        ctrlr.vm.network "private_network", ip: "192.168.100.8"
+        ctrlr.vm.hostname = "ctrlr.ubuntu.com"
+    end
+
+    config.vm.define "fecli" do |fecli|
+        fecli.vm.box = "hashicorp-vagrant/centos-7.4"
+        fecli.ssh.username = "vagrant"
+        fecli.ssh.password = "vagrant"
+        fecli.ssh.insert_key = false
+        fecli.vm.network "private_network", ip: "192.168.100.9"
+        fecli.vm.hostname = "fecli.ubuntu.com"
+    end
+
+    config.vm.define "becli" do |becli|
+        becli.vm.box = "hashicorp-vagrant/centos-7.4"
+        becli.ssh.username = "vagrant"
+        becli.ssh.password = "vagrant"
+        becli.ssh.insert_key = false
+        becli.vm.network "private_network", ip: "192.168.100.10"
+        becli.vm.hostname = "becli.ubuntu.com"
+    end
+end
