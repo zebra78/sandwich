@@ -1,0 +1,104 @@
+Referred to:
+
+SERVER
+https://www.linode.com/docs/databases/mysql/how-to-install-mysql-on-centos-7/
+https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-centos-7
+https://www.tecmint.com/install-latest-mysql-on-rhel-centos-and-fedora/
+PHP
+**---setsebool -P httpd_can_network_connect on
+https://www.cyberciti.biz/faq/rhel-fedora-redhat-centos-install-mysql-extension-for-php/
+https://www.howtoforge.com/apache_php_mysql_on_centos_7_lamp
+https://www.tecmint.com/test-php-mysql-database-connection-using-script/
+https://www.tecmint.com/run-php-codes-from-linux-commandline/
+CLI
+https://www.cyberciti.biz/faq/centos-linux-56-install-mysql-client-only/
+# [ONSERVER]: mysql> GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.100.6' IDENTIFIED BY 'mypassword' WITH GRANT OPTION
+# [ONSERVER]: mysql> GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.100.7' IDENTIFIED BY 'mypassword' WITH GRANT OPTION
+#mysql -u USER-NAME-HERE -h MYSQL-DB-SERVER-IP-ADDRESS-HERE -p DB-NAME
+
+
+
+
+"server.ubuntu.com":
+
+Run the following, this will install the mysql server. At step mysql_secure_installation ensure to set a password for root user:
+    [vagrant@server ~]$sudo yum update -y
+    [vagrant@server ~]$yum install wget
+    [vagrant@server ~]$sudo yum install wget -y
+    [vagrant@server ~]$wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+    [vagrant@server ~]$sudo rpm -ivh mysql-community-release-el7-5.noarch.rpm
+    [vagrant@server ~]$yum update -y
+    [vagrant@server ~]$sudo yum update -y
+    [vagrant@server ~]$sudo yum install mysql-server
+    [vagrant@server ~]$sudo systemctl start mysqld
+    [vagrant@server ~]$sudo mysql_secure_installation
+    [vagrant@server ~]$mysql -u root -p
+    [vagrant@server ~]$netstat -an | grep 3306
+
+
+"sqlcli.ubuntu.com"
+Run the following, to setup the client and connect using command line tools.
+
+    [vagrant@sqlcli ~]$sudo yum update -y
+    [vagrant@sqlcli ~]$yum install wget -y
+    [vagrant@sqlcli ~]$sudo yum install wget -y
+    [vagrant@sqlcli ~]$wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+    [vagrant@sqlcli ~]$sudo rpm -ivh mysql-community-release-el7-5.noarch.rpm
+    [vagrant@sqlcli ~]$sudo yum update -y
+    [vagrant@sqlcli ~]$sudo yum install mysql-community-client -y
+    [vagrant@sqlcli ~]$mysql -u root -h 192.168.100.5 -p mysql
+    [vagrant@sqlcli ~]$telnet 192.168.100.5 3306
+    [vagrant@sqlcli ~]$sudo yum install telnet -y
+    [vagrant@sqlcli ~]$telnet 192.168.100.5 3306
+    [vagrant@sqlcli ~]$mysql -u root -h 192.168.100.5 -p mysql
+
+"phpcli.ubuntu.com"
+Run the following, to setup the php client and connect using php -f command or browser.
+
+    [vagrant@phpcli ~]$sudo yum update -y
+    [vagrant@phpcli ~]$sudo yum install wget
+    [vagrant@phpcli ~]$wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+    [vagrant@phpcli ~]$sudo rpm -ivh mysql-community-release-el7-5.noarch.rpm
+    [vagrant@phpcli ~]$sudo yum update -y
+    [vagrant@phpcli ~]$sudo yum install php php-mysql httpd -y
+    [vagrant@phpcli ~]$php -i
+    [vagrant@phpcli ~]$php -r "phpinfo();"
+    [vagrant@phpcli ~]$php -r "phpinfo();"
+    [vagrant@phpcli ~]$curl localhost
+    [vagrant@phpcli ~]$ls -l /var/www/html/
+    [vagrant@phpcli ~]$curl localhost/mysql-test.php
+
+As root
+    [root@phpcli ~]#history
+    [root@phpcli ~]#cd /var/www/html/
+# see mysql-test.php at the end. 
+    [root@phpcli ~]#vi mysql-test.php
+    [root@phpcli ~]#php -f mysql-test.php
+    [root@phpcli ~]#systemctl status httpd
+    [root@phpcli ~]#curl localhost/mysql-test.php
+    [root@phpcli ~]#telnet 192.168.100.5 3306
+    [root@phpcli ~]#yum install telnet -y
+    [root@phpcli ~]#telnet 192.168.100.5 3306
+    [root@phpcli ~]#curl localhost/mysql-test.php
+    [root@phpcli ~]#yum install -y mysql-community-client
+    [root@phpcli ~]#mysql -u root -h 192.168.100.5 -p mysql
+    [root@phpcli ~]#setsebool -P httpd_can_network_connect on
+    [root@phpcli ~]#curl localhost/mysql-test.php
+
+        [root@phpcli ~]# cat /var/www/html/mysql-test.php
+        <?php
+        $servername = "192.168.100.5";
+        $username = "root";
+        $password = "mypassword";
+
+        // Create connection
+        $conn = mysqli_connect($servername, $username, $password);
+
+        // Check connection
+        if (!$conn) {
+            die("Connection failed: " . mysqli_connect_error());
+        }
+        echo "Connected successfully";
+        ?>
+        [root@phpcli ~]#
+
