@@ -40,7 +40,7 @@ Resources:
   MyFrontendSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-        CidrBlock: !Select [ 1, !Ref FrontendSubnetCidr ]
+        CidrBlock: !Select [ 0, !Ref FrontendSubnetCidr ]
         VpcId: !Ref MyVpc
 
 #  MyFrontendSubnet2:

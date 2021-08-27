@@ -1,6 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+#POST INSTALL alias aws="python3 -m awscli"
 $bootstrap=<<SCRIPT
   apt-get update
   apt-get install python3-pip -y
@@ -15,3 +16,5 @@ Vagrant.configure("2") do |config|
     a.vm.provision                :shell, inline: $bootstrap
   end
 end
+
+
