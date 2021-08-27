@@ -1,0 +1,19 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create IAM user'
+
+Resources:
+    Bob:
+        Type: AWS:IAM:User
+        Properties:
+            Username: Bob
+    BobApiKey:
+        Type: AWS:IAM:AccessKey
+        Properties:
+            Username: !Ref Bob
+
+Outputs:
+    BobKey:
+        Value: !Ref BobApiKey
+    BobSecret:
+        Value: !GetAttBobApiKey.SecretAccessKey
