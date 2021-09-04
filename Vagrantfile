@@ -15,6 +15,12 @@ Vagrant.configure("2") do |config|
     a.vm.network                  "private_network", ip: "192.168.100.169"
     a.vm.provision                :shell, inline: $bootstrap
   end
+
+  config.vm.define "proxy" do |a|
+    a.vm.box                      = "bento/ubuntu-18.04"
+    a.vm.hostname                 = "proxy.ubuntu.com"
+    a.vm.network                  "private_network", ip: "192.168.100.170"
+  end  
 end
 
 

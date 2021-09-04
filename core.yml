@@ -29,8 +29,25 @@ Resources:
   MyFrontendSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-        #CidrBlock: !Select [ 0, !Ref FrontendSubnetCidr ]
         CidrBlock: !Select [0, !Cidr [ !Ref VpcCidr, 12, 8 ]]
+        VpcId: !Ref MyVpc
+        Tags:
+          - Key: Name
+            Value: !If [IsProd, "IsProdFound", "IsProdNotfound"]
+  
+    MyFrontendSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+        CidrBlock: !Select [1, !Cidr [ !Ref VpcCidr, 12, 8 ]]
+        VpcId: !Ref MyVpc
+        Tags:
+          - Key: Name
+            Value: !If [IsProd, "IsProdFound", "IsProdNotfound"]
+    
+      MyFrontendSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+        CidrBlock: !Select [2, !Cidr [ !Ref VpcCidr, 12, 8 ]]
         VpcId: !Ref MyVpc
         Tags:
           - Key: Name
@@ -42,7 +59,8 @@ Outputs:
     Export:
       Name: MyVpcId
 
-  MyFrontendSubnetId:
-    Value: !Ref MyFrontendSubnet1
+  MyFrontendSubnetIds:
+    #Value: !Ref MyFrontendSubnet1
+    Value: !Split [",", !Join [",", [!Ref MyFrontendSubnet1, !Ref MyFrontendSubnet2, !Ref MyFrontendSubnet3]]]
     Export:
-      Name: MyFrontendSubnetId
+      Name: MyFrontendSubnetIds
