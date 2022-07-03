@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$bootstrap=<<SCRIPT
+echo "in bootstrap"
+apt update
+apt-get install snapd -y
+snap install kubectl --classic
+snap install microk8s --classic
+echo "after update"
+#  sudo apt update 
+#  apt-get install snapd -y 
+#  snap install kubectl --classic 
+#  snap install microk8s --classic --channel=1.18/stable 
+#  usermod -a -G microk8s vagrant 
+#  chown -f -R vagrant ~/.kube 
+#  microk8s start 
+#  snap install helm --classic 
+#  ufw allow in on cni0 && sudo ufw allow out on cni0 
+#  ufw default allow routed 
+#  microk8s enable dns dashboard storage registry 
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.define "mk8s" do |a|
+    a.vm.box                      = "bento/ubuntu-20.04"
+    a.vm.hostname                 = "mk8s.madhu"
+    a.vm.network                  "private_network", ip: "192.168.56.23"
+    a.vm.provision                :shell, inline: $bootstrap
+  end
+end
+
+
